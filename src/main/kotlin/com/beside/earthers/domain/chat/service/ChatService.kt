@@ -42,7 +42,7 @@ class ChatService() {
         return ChatResponse(content = url)
     }
 
-    // 대화문 전체 리턴
+    // 대화문 전체 한번에 리턴
     fun getWholeText(systemContent: String, userContent: String): Flux<ChatResponse> {
 
         val webClient = WebClient
@@ -72,13 +72,9 @@ class ChatService() {
         return webClient
             .post()
             .uri("/v1/chat-completions/HCX-002")
-            .header(
-                "X-NCP-CLOVASTUDIO-API-KEY",
-                "NTA0MjU2MWZlZTcxNDJiY4cyfaac60z6JxrOLQx9W8dUOoYNm+iNonUtHqXyY1g1R/OXMwDUZZUZ+m3ibwOqe0c44LcdDbGZdGQIxVPvGofQq1tVglc/zguhbgoXX7ntqW1zmhuVHQiOybw7ewXbdAFh/z8AhSKnJ8eTPN93t8YBesnFBwKXGQo1bso5BBZ/QOce7af4B+3J91JHnB5HgIKPcKejyJwEg0dDeUqo85Q="
-            )
-            .header("X-NCP-APIGW-API-KEY", "eNoiDkssJU4Ntq04aDQOvTEkVTVKMPfXjJG9WsMX")
-            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", "309a7cca83fb4254b612b7540bdfac93")
-            .header("Accept", "text/event-stream")
+            .header("X-NCP-CLOVASTUDIO-API-KEY", clovaStudioApiKey)
+            .header("X-NCP-APIGW-API-KEY", apigwApiKey)
+            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", requestId)
             .header(HttpHeaders.ACCEPT, "text/event-stream")
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(requestPayload))
@@ -108,8 +104,65 @@ class ChatService() {
             }
     }
 
+    // 대화문 스트림 리턴
+    fun processChatCompletion(systemContent: String, userContent: String): Flux<String> {
 
-    ////
+        val objectMapper = ObjectMapper()
+
+
+        val webClient = WebClient
+            .builder()
+            .baseUrl("https://clovastudio.stream.ntruss.com/testapp")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build()
+
+        val requestPayload = """
+            {
+                "messages": [
+                    {"role": "system", "content": "$systemContent"},
+                    {"role": "user", "content": "$userContent"}
+                ],
+                "topP": 0.8,
+                "topK": 0,
+                "maxTokens": 256,
+                "temperature": 0.5,
+                "repeatPenalty": 5.0,
+                "stopBefore": [],
+                "includeAiFilters": true
+            }
+        """.trimIndent()
+
+        return webClient
+            .post()
+            .uri("/v1/chat-completions/HCX-002")
+            .header("X-NCP-CLOVASTUDIO-API-KEY", clovaStudioApiKey)
+            .header("X-NCP-APIGW-API-KEY", apigwApiKey)
+            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", requestId)
+            .header(HttpHeaders.ACCEPT, "text/event-stream")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(BodyInserters.fromValue(requestPayload))
+            .retrieve()
+            .bodyToFlux(String::class.java)
+
+            // takeUntil : 지정된 조건 충족될 때까지의 데이터만을 방출하고 이후 스트림 종료
+            .takeUntil { data ->
+                // println("data2 : " + data)
+                val jsonNode: JsonNode = objectMapper.readTree(data)
+                val stopReasonNode = jsonNode.get("stopReason")
+                stopReasonNode != null && stopReasonNode.isTextual && stopReasonNode.asText() == "stop_before"
+            }
+
+            .map { data ->
+                // println("data1 : " + data)
+                val jsonNode: JsonNode = objectMapper.readTree(data)
+                val content = jsonNode["message"]["content"].asText()
+                "$content" // 각 데이터를 새로운 라인으로 분리
+            }
+            .doOnCancel { }
+    }
+
+
+    // 테스트
 
     // 출력은 한글자씩 되는데 리턴이 안되는 상황
     // 컨트롤러에서 리턴해서 두번 호출하게 되면 429 에러 (Too many requests)

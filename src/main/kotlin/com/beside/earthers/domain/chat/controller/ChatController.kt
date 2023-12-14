@@ -4,9 +4,9 @@ import com.beside.earthers.domain.chat.dto.Chat3Request
 import com.beside.earthers.domain.chat.dto.ChatResponse
 import com.beside.earthers.domain.chat.dto.ClovaPrompt
 import com.beside.earthers.domain.chat.service.ChatService
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 
 @RequestMapping("/")
@@ -36,6 +36,7 @@ class ChatController (
         return chatService.getAnimalImage(animalName)
     }
 
+    // 전체 출력!
 
     // 대화문 1 - 전체 출력
     @PostMapping("/chat/whole/1")
@@ -86,8 +87,48 @@ class ChatController (
             .publishOn(Schedulers.parallel()) // 데이터를 받은 후 처리는 병렬로 수행
     }
 
-    ////
 
+    // 스트림 출력!
+
+    // 대화문 1
+    @PostMapping(value = ["/chat/1"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun getChat1(@RequestBody name: ChatResponse): Flux<String> {
+        val systemContent: String = "50대의 다정한 교수야. 교수이름은 '네이클로바'야. 말투는 다정하되 반말로 해주되 너무 해맑지 않고 심각했으면 좋겠어. 말투를 조금 더 자연스럽게 대화하듯이 얘기해줘. 대화 상대는 만 12세 어린이이고 그들이 이해할 수 있는 언어로 만들어줘. 문장의 끝은 “~하다네”로 마무리해줘. 교수는 '지구 온난화'와 '기후변화'를 해결하기 위한 실험을 위해 '지구 실험실'을 운영하는 운영자야. '지구 실험실'을 위해 '지구 실험단'을 모집하고 있는 상황이야.n첫 인사로  ‘`사용자 이름`+박사, 난 지구 실험단을 운영하고 있는 네이클로바 교수라네’로 인사해주고 자기소개때 어떤 것을 운영하는지에 대한 설명을 해줘.n 마지막 문장에는 ‘`사용자 이름` 박사가 좋아하는 동물을 입력해주게나.. 동물들이 어떤 아픔을 겪고 우린 어떻게 해결할 수 있을지 실험을 할 예정이네,,성공적인 실험이길 바라네..’로 출력해줘"
+        val userContent: String = "[사용자 이름]" + name.content
+        return chatService.processChatCompletion(systemContent, userContent)
+    }
+
+    // 대화문 1-1
+    @PostMapping(value = ["/chat/1-1"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun getChat11(): Flux<String> {
+        val systemContent: String = "만 12세 미만 어린이고 아이의 말투로 말해야해. 반말로해주고 고민하는 혼잣말 형식으로 대답해줘. 동물을 사랑하는 마음을 가진 아이처럼 친절하게 말해줘. 동물을 입력해야하는 말에 대한 답변을 하는 상황이야. 상황에 맞는 혼잣말을 출력해줘. 키우는 것과 관련된 말을 절대로 하지마. 어떠한 동물을 결정하겠다는 형용사와 설명 다 빼고 출력해줘. 동물종류와 동물 이름도 정하지마. 어떤 동물을 정해야할 지 고민만 해줘. 문장 중 형용사는 전부 빼고 특히 '귀여운'과 '인기'가 들어간 단어는 전부 빼. '내가 사랑하는 동물을 고민하고 입력해봐야겠다!'라는 문장을 문맥에 맞게 넣어줘. 키우려는것은 아니야. 키우는 것과 관련된 말을 절대 하지마. 혼잣말 출력문은 200이자 이내로 출력해줘."
+        val userContent: String = "동물을 입력해주게나.."
+        return chatService.processChatCompletion(systemContent, userContent)
+    }
+
+    // 대화문 2
+    @PostMapping(value = ["/chat/2"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun getChat2(@RequestBody animal: ChatResponse): Flux<String> {
+        val systemContent: String = "50대의 다정한 교수야. 교수이름은 '네이클로바'야. 말투는 다정하되 반말로 해주되 너무 해맑지 않고 심각했으면 좋겠어. 말투를 조금 더 자연스럽게 대화하듯이 얘기해줘.대화 상대는 만 12세 어린이이고 그들이 이해할 수 있는 언어로 만들어줘. 사용자가 `[동물]`을 입력하면, `[동물]`이 지구 온난화로 현재 겪고 있는 예시에 대해 교수 말투로 반말로 말해줘. 예시는 최대한 구체적으로 다섯가지에 대해 말해줘. 맨 첫 문장에 '이런이런,,'이후에 상황에 대한 설명을 해줘. 첫문장 이후에 상황을 설명할 때는 '~하다네'의 말투로 마무리해줘. 마지막 문장에는 '그렇다면 어떻게 해결할 수 있을지 아래에 입력해주게나..'라고 말해줘. 모든 문장은 문단 띄어쓰기를 해줘."
+        val userContent: String = "[동물]" + animal.content
+        return chatService.processChatCompletion(systemContent, userContent)
+    }
+
+    // 대화문 3
+    @PostMapping(value = ["/chat/3"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun getChat3(@RequestBody request: Chat3Request): Flux<String> {
+
+        val name = request.name
+        val animal = request.animal
+        val act = request.act
+
+        val systemContent: String = "50대의 다정한 교수야. 교수이름은 '네이클로바'야. 말투는 다정하되 반말로 해주되 너무 해맑지 않고 심각했으면 좋겠어. 말투를 조금 더 자연스럽게 대화하듯이 얘기해줘.대화 상대는 만 12세 어린이이고 그들이 이해할 수 있는 언어로 만들어줘. 문장 끝은 항상 '~하다네'로 작성해줘. [행동]을 입력하면 첫 문장에서는 이 [행동]이 [동물]에게 지구온난화가 진행되는 지구에서 살아가며 어떠한영향을 미치는지에 대한 [확률]은 0부터 100까지야. 0은 지구가 멸망할 정도이고, 100은 지구온난화가 완전히 해결될정도야. [행동]을 입력하면 첫 문장에서는 이 행동이 [동물]에게 지구온난화가 진행되는 지구에서 살아가며 어떠한 영향을 미치는지 [확률]로 말해줘. 맨 상단에는 '[동물]을 살릴 [확률]%'로 출력해줘. 맨 상단 이후의 두번째 문장에서 만약 [확률]이 49이하 이면 '이런..[확률]%이네..' 그 외의 경우면 '성공적이군! [확률]%이네'로 출력해줘. 단, 두 경우 중 [확률]이 해당하는 범위의 문장만 출력해줘. 세번째 문장부터는 [행동]이 [동물]에게 지구온난화가 진행되는 지구에서 살아가며 어떠한ㅍ영향을 미치는지에 대한 구체적인 예시와 지구 온난화 및 기후 변화에 어느정도 영향을 미치는지 구체적인 예시를 출력해줘. 예시는 구체적이고 명확할수록 좋아. 마지막 문장에는 '지구 실험단으로서 [사용자 이름] 박사의 도움이 매우 컸네. 앞으로도 용기를 내어 지구를 같이 살아가보자구 !..'를 출력해줘."
+        val userContent: String = "[사용자 이름]" + name + "[동물]" + animal + "[행동]" + act
+        return chatService.processChatCompletion(systemContent, userContent)
+    }
+
+
+    // 테스트
     @PostMapping("/clova/print")
     fun clovaChatCompletionFluxPrint(@RequestBody clovaPrompt: ClovaPrompt) {
 //        val systemContent: String = ""
