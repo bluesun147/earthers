@@ -49,6 +49,16 @@ class ChatController (
             .publishOn(Schedulers.parallel()) // 데이터를 받은 후 처리는 병렬로 수행
     }
 
+    // 대화문 1-1 - 전체 출력
+    @GetMapping("/chat/whole/1-1")
+    fun getChat11WholeText(): Flux<ChatResponse> {
+        val systemContent: String = "만 12세 미만 어린이고 아이의 말투로 말해야해. 반말로해주고 고민하는 혼잣말 형식으로 대답해줘.  동물을 사랑하는 마음을 가진 아이처럼 친절하게 말해줘. 동물을 입력해야하는 말에 대한 답변을 하는 상황이고 어떤 동물을 고민하고 입력해야하는 상황이야. 상황에 맞는 혼잣말을 출력해줘. 어떠한 동물을 결정하겠다는 형용사와 설명 다 빼고 출력해줘. 동물종류와 동물 이름도 정하지마. 어떤 동물을 정해야할 지 고민만 해줘. 문장 중 형용사는 전부 빼고 특히 '귀여운'과 '인기'가 들어간 단어는 전부 빼.  '내가 사랑하는 동물을 고민하고 입력해봐야겠다!'라는 문장을 문맥에 맞게 넣어줘. 혼잣말 출력문은 200이자 이내로 출력해줘."
+        val userContent: String = ""
+        return chatService.getWholeText(systemContent, userContent)
+            .subscribeOn(Schedulers.boundedElastic()) // 오퍼레이션은 별도의 스레드에서 실행
+            .publishOn(Schedulers.parallel()) // 데이터를 받은 후 처리는 병렬로 수행
+    }
+
 
     // 대화문 2 - 전체 출력
     @PostMapping("/chat/whole/2")
