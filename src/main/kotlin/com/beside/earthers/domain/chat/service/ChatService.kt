@@ -4,6 +4,7 @@ import com.beside.earthers.domain.chat.dto.ChatResponse
 import com.beside.earthers.domain.chat.dto.ClovaPrompt
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -14,6 +15,15 @@ import reactor.core.publisher.Flux
 
 @Service
 class ChatService() {
+
+    @Value("\${clovastudio.api-key}")
+    private lateinit var clovaStudioApiKey: String
+
+    @Value("\${clovastudio.apigw-api-key}")
+    private lateinit var apigwApiKey: String
+
+    @Value("\${clovastudio.request-id}")
+    private lateinit var requestId: String
 
     // 이름 입력
     fun getName(name: String): String {
@@ -136,12 +146,9 @@ class ChatService() {
         val flux = webClient
             .post()
             .uri("/v1/chat-completions/HCX-002")
-            .header(
-                "X-NCP-CLOVASTUDIO-API-KEY",
-                "NTA0MjU2MWZlZTcxNDJiY4cyfaac60z6JxrOLQx9W8dUOoYNm+iNonUtHqXyY1g1R/OXMwDUZZUZ+m3ibwOqe0c44LcdDbGZdGQIxVPvGofQq1tVglc/zguhbgoXX7ntqW1zmhuVHQiOybw7ewXbdAFh/z8AhSKnJ8eTPN93t8YBesnFBwKXGQo1bso5BBZ/QOce7af4B+3J91JHnB5HgIKPcKejyJwEg0dDeUqo85Q="
-            )
-            .header("X-NCP-APIGW-API-KEY", "eNoiDkssJU4Ntq04aDQOvTEkVTVKMPfXjJG9WsMX")
-            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", "309a7cca83fb4254b612b7540bdfac93")
+            .header("X-NCP-CLOVASTUDIO-API-KEY", clovaStudioApiKey)
+            .header("X-NCP-APIGW-API-KEY", apigwApiKey)
+            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", requestId)
             // stream으로 명시 안하면 한번에 리턴
             .header(HttpHeaders.ACCEPT, "text/event-stream")
             .contentType(MediaType.APPLICATION_JSON)
@@ -215,12 +222,9 @@ class ChatService() {
         return webClient
             .post()
             .uri("/v1/chat-completions/HCX-002")
-            .header(
-                "X-NCP-CLOVASTUDIO-API-KEY",
-                "NTA0MjU2MWZlZTcxNDJiY4cyfaac60z6JxrOLQx9W8dUOoYNm+iNonUtHqXyY1g1R/OXMwDUZZUZ+m3ibwOqe0c44LcdDbGZdGQIxVPvGofQq1tVglc/zguhbgoXX7ntqW1zmhuVHQiOybw7ewXbdAFh/z8AhSKnJ8eTPN93t8YBesnFBwKXGQo1bso5BBZ/QOce7af4B+3J91JHnB5HgIKPcKejyJwEg0dDeUqo85Q="
-            )
-            .header("X-NCP-APIGW-API-KEY", "eNoiDkssJU4Ntq04aDQOvTEkVTVKMPfXjJG9WsMX")
-            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", "309a7cca83fb4254b612b7540bdfac93")
+            .header("X-NCP-CLOVASTUDIO-API-KEY", clovaStudioApiKey)
+            .header("X-NCP-APIGW-API-KEY", apigwApiKey)
+            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", requestId)
             .header("Accept", "text/event-stream")
             .header(HttpHeaders.ACCEPT, "text/event-stream")
             .contentType(MediaType.APPLICATION_JSON)
