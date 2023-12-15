@@ -12,6 +12,7 @@ import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.Disposable
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @Service
 class ChatService() {
@@ -37,6 +38,13 @@ class ChatService() {
 
     // 동물 이미지 url
     fun getAnimalImage(animal: String): ChatResponse {
+        println(animal)
+        val url = "https://source.unsplash.com/900x900/?" + animal
+        return ChatResponse(content = url)
+    }
+
+    // 동물 이미지 url2
+    fun getAnimalImage2(animal: String): ChatResponse {
         println(animal)
         val url = "https://source.unsplash.com/900x900/?" + animal
         return ChatResponse(content = url)
@@ -103,6 +111,62 @@ class ChatService() {
                 }
             }
     }
+
+
+    fun getWholeText2(systemContent: String, userContent: String): Flux<Map<String, String>> {
+
+        val webClient = WebClient
+            .builder()
+            .baseUrl("https://clovastudio.stream.ntruss.com/testapp")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build()
+
+        val requestPayload = """
+        {
+            "messages": [
+                {"role": "system", "content": "$systemContent"},
+                {"role": "user", "content": "$userContent"}
+            ],
+            "topP": 0.8,
+            "topK": 0,
+            "maxTokens": 256,
+            "temperature": 0.5,
+            "repeatPenalty": 5.0,
+            "stopBefore": [],
+            "includeAiFilters": true
+        }
+    """.trimIndent()
+
+        val objectMapper = ObjectMapper()
+
+        return webClient
+            .post()
+            .uri("/v1/chat-completions/HCX-002")
+            .header("X-NCP-CLOVASTUDIO-API-KEY", clovaStudioApiKey)
+            .header("X-NCP-APIGW-API-KEY", apigwApiKey)
+            .header("X-NCP-CLOVASTUDIO-REQUEST-ID", requestId)
+            .header(HttpHeaders.ACCEPT, "text/event-stream")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(BodyInserters.fromValue(requestPayload))
+            .retrieve()
+            .bodyToFlux(String::class.java)
+            .flatMap { data ->
+                try {
+                    val jsonNode: JsonNode = objectMapper.readTree(data)
+                    val stopReasonNode = jsonNode.get("stopReason")
+                    val content = jsonNode["message"]["content"].asText()
+                    if (stopReasonNode != null && stopReasonNode.asText() == "stop_before" && content != "") {
+                        Flux.just(mapOf("content" to content))
+                    } else {
+                        Flux.empty()
+                    }
+                } catch (e: Exception) {
+                    // JSON 파싱 중 에러가 발생한 경우 빈 Flux 반환
+                    Flux.empty()
+                }
+            }
+    }
+
 
     // 대화문 스트림 리턴
     fun processChatCompletion(systemContent: String, userContent: String): Flux<String> {

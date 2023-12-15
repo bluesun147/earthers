@@ -31,10 +31,39 @@ class ChatController (
 
     // 동물 이미지 url
     @PostMapping("/image")
-    fun getAnimalImage(@RequestBody animal: ChatResponse): ChatResponse {
+    fun getAnimalImage(@RequestBody animal: ChatResponse): Flux<Map<String, String>> {
         val animalName = animal.content
-        return chatService.getAnimalImage(animalName)
+//        return chatService.getAnimalImage(animalName)
+
+//        val systemContent: String = "너는 한글 -> 영어 번역기야. 입력하는 문장 중 동물에 해당하는 단어를 찾아. 입력하는 동물 단어와 가장 비슷한 평범한 동물을 말해줘. 그리고 그 동물을 영어로 변역하고 영단어만 말해. 부가 설명 없이 영어 단어만을 말해. 비슷한 동물을 찾을 때  입력한 단어를 비슷한 동물로 찾은 뒤 영어 단어 명사형으로 출력해줘. 비슷한 동물에 대한 설명은 필요없어. 한글 해석도 필요없어. 영어 단어를 괄호에 넣지말고 출력해. 꼭 영어 단어만 출력해. 한글로 절대로 죽어도 말하지마. 영어로 말해."
+        val systemContent: String = "너는 한글 -> 영어 번역기야. 입력하는 단어를 영어로 번역해. 부가 설명 없이 영어 단어만을 츨력해."
+        val userContent: String = animalName
+
+
+        val flux2 = chatService.getWholeText2(systemContent, userContent)
+            .map { response -> mapOf("content" to (response["content"]?.replace(" ", "_") ?: ""))
+            }
+
+
+        val flux3 = chatService.getWholeText2(systemContent, userContent)
+            .map { response ->
+                val englishOnly = response["content"]?.replace("[^a-zA-Z]".toRegex(), "")
+//                mapOf("content" to englishOnly ?: "")
+                mapOf("content" to englishOnly)
+            }
+
+
+        val flux = chatService.getWholeText2(systemContent, userContent)
+            .map { response ->
+                val cleanedContent = response["content"]?.replace("[^a-zA-Z\\s]".toRegex(), "")?.toLowerCase()
+                val processedContent = "https://source.unsplash.com/1600x900/?" + (cleanedContent?.replace(" ", "_") ?: "")
+                mapOf("content" to processedContent)
+            }
+
+
+        return flux
     }
+
 
     // 전체 출력!
 
