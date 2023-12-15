@@ -5,9 +5,14 @@ import com.beside.earthers.domain.chat.dto.ClovaPrompt
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.InputStreamResource
+import org.springframework.core.io.buffer.DataBuffer
+import org.springframework.core.io.buffer.DataBufferUtils
+import org.springframework.core.io.buffer.DefaultDataBufferFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.BodyExtractors
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.Disposable
@@ -220,10 +225,24 @@ class ChatService() {
                 // println("data1 : " + data)
                 val jsonNode: JsonNode = objectMapper.readTree(data)
                 val content = jsonNode["message"]["content"].asText()
-                "$content" // 각 데이터를 새로운 라인으로 분리
+//                "$content" // 각 데이터를 새로운 라인으로 분리
+
+                // Check if content is "\n" and replace it with "\n" in quotes
+                val modifiedContent = if (content == "\n") "\"\\n\"" else content
+
+                modifiedContent // Return modified content
             }
             .doOnCancel { }
     }
+
+
+
+
+
+
+
+
+
 
 
     // 테스트
