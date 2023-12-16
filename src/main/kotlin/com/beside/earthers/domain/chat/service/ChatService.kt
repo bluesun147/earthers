@@ -135,7 +135,7 @@ class ChatService() {
             "topP": 0.8,
             "topK": 0,
             "maxTokens": 256,
-            "temperature": 0.5,
+            "temperature": 0.13,
             "repeatPenalty": 5.0,
             "stopBefore": [],
             "includeAiFilters": true
