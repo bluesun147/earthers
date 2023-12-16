@@ -222,17 +222,24 @@ class ChatService() {
             }
 
             .map { data ->
-                // println("data1 : " + data)
                 val jsonNode: JsonNode = objectMapper.readTree(data)
                 val content = jsonNode["message"]["content"].asText()
-//                "$content" // 각 데이터를 새로운 라인으로 분리
 
                 // Check if content is "\n" and replace it with "\n" in quotes
                 val modifiedContent = if (content == "\n") "\"\\n\"\"\\n\"" else content
 
                 modifiedContent // Return modified content
             }
-            .doOnCancel { }
+            .scan { prevContent, currentContent ->
+                // 이전 데이터와 현재 데이터가 연속으로 "\n""\n"인 경우 두 번째 데이터를 빈 문자열("")로 만들어줌
+                if (prevContent == "\"\\n\"\"\\n\"" && currentContent == "\"\\n\"\"\\n\"") {
+                    ""
+                } else {
+                    currentContent
+                }
+            }
+            .doOnCancel { /* 작업 취소 시 수행할 동작 */ }
+
     }
 
 
