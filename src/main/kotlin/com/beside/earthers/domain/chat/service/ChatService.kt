@@ -228,7 +228,7 @@ class ChatService() {
 //                "$content" // 각 데이터를 새로운 라인으로 분리
 
                 // Check if content is "\n" and replace it with "\n" in quotes
-                val modifiedContent = if (content == "\n") "\"\\n\"" else content
+                val modifiedContent = if (content == "\n") "\"\\n\"\"\\n\"" else content
 
                 modifiedContent // Return modified content
             }
