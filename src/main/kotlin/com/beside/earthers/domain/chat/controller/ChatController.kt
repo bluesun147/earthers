@@ -61,8 +61,8 @@ class ChatController (
 
         val flux = chatService.getWholeText2(systemContent, userContent)
             .map { response ->
-                val cleanedContent = response["content"]?.replace("[^a-zA-Z\\s]".toRegex(), "")?.toLowerCase()
-                val processedContent = "https://image.pollinations.ai/prompt/" + (cleanedContent?.replace(" ", "_") ?: "")
+                val cleanedContent = response["content"]?.replace("[^a-zA-Z\\s]".toRegex(), "")
+                val processedContent = "https://image.pollinations.ai/prompt/" + (cleanedContent?.replace(" ", "") ?: "")
                 mapOf("content" to processedContent)
             }
 
