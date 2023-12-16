@@ -56,13 +56,15 @@ class ChatController (
 //        return chatService.getAnimalImage(animalName)
 
         val systemContent: String = ""
-        val userContent: String = "해당 단어를 영어로 번역하고 띄어쓰기가 있다면 사이에 _를 넣어줘. " + animalName
+        val userContent: String = "해당 단어를 영어로 번역하고 첫 글자는 대문자로 해줘 : " + animalName
 
 
         val flux = chatService.getWholeText2(systemContent, userContent)
             .map { response ->
                 val cleanedContent = response["content"]?.replace("[^a-zA-Z\\s]".toRegex(), "")
-                val processedContent = "https://image.pollinations.ai/prompt/" + (cleanedContent?.replace(" ", "") ?: "")
+//                val processedContent = "https://image.pollinations.ai/prompt/" + (cleanedContent?.replace(" ", "") ?: "")
+                val processedContent = "https://image.pollinations.ai/prompt/" +
+                        (cleanedContent?.replace(" ", "")?.capitalize() ?: "")
                 mapOf("content" to processedContent)
             }
 
